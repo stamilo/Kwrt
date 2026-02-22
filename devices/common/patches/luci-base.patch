@@ -283,9 +283,9 @@
 +			return this.apply('hostname', hostname);
 +		},
 +
- 		network() {
- 			return this.assert(this.apply('uciname') || this.apply('hostname') || this.apply('ip4addr') || this.apply('ip6addr'),
- 				_('valid UCI identifier, hostname or IP address range'));
+ 		/**
+ 		 * Assert a valid UCI identifier, hostname or IP address range.
+ 		 * @function LuCI.validation.ValidatorFactory.types#network
 
 --- a/package/feeds/luci/luci-base/root/usr/share/luci/menu.d/luci-base.json
 +++ b/package/feeds/luci/luci-base/root/usr/share/luci/menu.d/luci-base.json

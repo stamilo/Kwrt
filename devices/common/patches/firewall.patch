@@ -103,7 +103,7 @@
 +		o.rmempty = false;
 +		o.datatype = 'integer';
 +
- 		var p = [
+ 		let p = [
  			s.option(form.ListValue, 'input', _('Input')),
  			s.option(form.ListValue, 'output', _('Output')),
 
