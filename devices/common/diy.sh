@@ -36,7 +36,6 @@ wget -N https://github.com/immortalwrt/immortalwrt/raw/refs/heads/openwrt-25.12/
 
 rm -rf package/libs/openssl package/network/services/ppp
 git_clone_path openwrt-25.12 https://github.com/immortalwrt/immortalwrt package/libs/openssl package/network/services/ppp
-mv -f feeds/kiddin9/{luci-base,luci-mod-network,luci-mod-status,luci-mod-system} package/feeds/luci/
 
 echo "$(date +"%s")" >version.date
 sed -i '/$(curdir)\/compile:/c\$(curdir)/compile: package/opkg/host/compile' package/Makefile
