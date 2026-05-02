@@ -12,7 +12,6 @@ sed -i '/	refresh_config();/d' scripts/feeds
 sed -i "s?git.openwrt.org/\(project\|feed\)?github.com/openwrt?g" feeds.conf.default
 
 ./scripts/feeds update -a
-./scripts/feeds install -a -p kiddin9 -f
 ./scripts/feeds install -a
 
 sed --follow-symlinks -i "s#%C\"#%C by Kiddin'\"#" package/base-files/files/etc/os-release

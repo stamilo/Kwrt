@@ -233,10 +233,40 @@ jobs:
         df -hT
         cd openwrt
         echo -e "$(($(nproc)+1)) thread compile"
-        make -j$(($(nproc)+1)) || { log=$(mktemp);make V=s &>$log; } || { tail -50 $log; curl -k --data chat_id="${{ env.TELEGRAM_CHAT_ID }}" --data "text=❌ OpenWrt ${{ env.VERSION }} ${{matrix.target}} 编译失败 😂" "https://api.telegram.org/bot${{ env.TELEGRAM_TOKEN }}/sendMessage";df -hT;exit 1; }
+        make -j$(($(nproc)+1)) || {
+          echo "::group::Retry with V=sc -j1 (full verbose)"
+          log=$(mktemp)
+          make -j1 V=sc &>"$log" || true
+          echo "::endgroup::"
+          echo "::group::Last 500 lines of verbose build log"
+          tail -n 500 "$log"
+          echo "::endgroup::"
+          echo "::group::First package failure (context: 80 lines before/20 after first 'Error' or 'ERROR:')"
+          grep -n -m1 -E "^(make\[[0-9]+\]: \*\*\* .* Error |ERROR: package/)" "$log" | head -1 | awk -F: '{print $1}' | xargs -I{} sh -c 'awk "NR>={}-80 && NR<={}+20" "$0"' "$log" || true
+          echo "::endgroup::"
+          echo "::group::All ERROR/Error lines"
+          grep -nE "^(ERROR:|make\[[0-9]+\]: \*\*\* .* Error |.*: error:|.*: fatal error:)" "$log" | head -200
+          echo "::endgroup::"
+          mkdir -p "$GITHUB_WORKSPACE/build-logs"
+          cp "$log" "$GITHUB_WORKSPACE/build-logs/${{matrix.target}}-verbose.log"
+          for d in logs build_dir/host/*/build_log build_dir/target-*/*/build_log; do
+            [ -d "openwrt/$d" ] && cp -r "openwrt/$d" "$GITHUB_WORKSPACE/build-logs/" 2>/dev/null || true
+          done
+          curl -k --data chat_id="${{ env.TELEGRAM_CHAT_ID }}" --data "text=❌ OpenWrt ${{ env.VERSION }} ${{matrix.target}} 编译失败 😂" "https://api.telegram.org/bot${{ env.TELEGRAM_TOKEN }}/sendMessage" || true
+          df -hT
+          exit 1
+        }
         rm -rf staging_dir/toolchain-*/bin/*openwrt-linux-musl-lto-dump
         rm -rf staging_dir/toolchain-*/initial
         df -hT
+
+    - name: Upload build logs on failure
+      if: failure()
+      uses: actions/upload-artifact@main
+      with:
+        name: build-logs-${{ matrix.target }}
+        path: build-logs/
+        if-no-files-found: ignore
 
     - name: Organize files
       id: organize
